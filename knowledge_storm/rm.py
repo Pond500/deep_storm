@@ -937,12 +937,22 @@ class TavilySearchRM(dspy.Retrieve):
         collected_results = []
 
         for query in queries:
+            # Add delay to avoid rate limiting (Tavily free tier)
+            import time
+            time.sleep(1.0)  # 1 second delay between requests
+            
             args = {
                 "max_results": self.k,
                 "include_raw_contents": self.include_raw_content,
             }
             #  list of dicts that will be parsed to return
-            responseData = self.tavily_client.search(query)
+            try:
+                responseData = self.tavily_client.search(query)
+            except Exception as e:
+                print(f"⚠️  Tavily API error for query '{query}': {e}")
+                print(f"    Skipping this query and continuing...")
+                continue
+                
             results = responseData.get("results")
             for d in results:
                 # assert d is dict

@@ -25,3 +25,8 @@ secrets.toml
 */assertion.log
 *results/
 .venv/
+
+# Output directories and large files
+output/
+redirects.lmdb/
+frontend/demo_light/output/

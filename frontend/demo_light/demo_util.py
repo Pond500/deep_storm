@@ -18,7 +18,7 @@ from knowledge_storm import (
     STORMWikiRunner,
     STORMWikiLMConfigs,
 )
-from knowledge_storm.lm import OpenAIModel
+from knowledge_storm.lm import OpenAIModel, LitellmModel
 from knowledge_storm.rm import YouRM
 from knowledge_storm.storm_wiki.modules.callback import BaseCallbackHandler
 from knowledge_storm.utils import truncate_filename
@@ -579,21 +579,59 @@ def set_storm_runner():
     if not os.path.exists(current_working_dir):
         os.makedirs(current_working_dir)
 
-    # configure STORM runner
+    # configure STORM runner with custom LLM
     llm_configs = STORMWikiLMConfigs()
-    llm_configs.init_openai_model(
-        openai_api_key=st.secrets["OPENAI_API_KEY"], openai_type="openai"
-    )
-    llm_configs.set_question_asker_lm(
-        OpenAIModel(
-            model="gpt-4-1106-preview",
-            api_key=st.secrets["OPENAI_API_KEY"],
-            api_provider="openai",
+    
+    # ตั้งค่า custom LLM (ptm-oss-120b)
+    llm_api_key = st.secrets.get("LLM__API_KEY")
+    llm_base_url = st.secrets.get("LLM__BASE_URL")
+    llm_model_name = st.secrets.get("LLM__MODEL_NAME", "ptm-oss-120b")
+    
+    # ถ้าไม่มี custom LLM ให้ fallback ไป OpenAI
+    if llm_api_key and llm_base_url:
+        # ใช้ Custom LLM
+        llm_kwargs = {
+            'api_key': llm_api_key,
+            'api_base': llm_base_url,
+            'temperature': 1.0,
+            'top_p': 0.9,
+        }
+        
+        # Model สำหรับ conversation (ใช้ tokens น้อย)
+        conv_model = LitellmModel(
+            model=f'openai/{llm_model_name}',
             max_tokens=500,
-            temperature=1.0,
-            top_p=0.9,
+            **llm_kwargs
         )
-    )
+        
+        # Model สำหรับ article generation
+        gen_model = LitellmModel(
+            model=f'openai/{llm_model_name}',
+            max_tokens=3000,
+            **llm_kwargs
+        )
+        
+        llm_configs.set_conv_simulator_lm(conv_model)
+        llm_configs.set_question_asker_lm(conv_model)
+        llm_configs.set_outline_gen_lm(gen_model)
+        llm_configs.set_article_gen_lm(gen_model)
+        llm_configs.set_article_polish_lm(gen_model)
+    else:
+        # Fallback: ใช้ OpenAI
+        llm_configs.init_openai_model(
+            openai_api_key=st.secrets["OPENAI_API_KEY"], openai_type="openai"
+        )
+        llm_configs.set_question_asker_lm(
+            OpenAIModel(
+                model="gpt-4-1106-preview",
+                api_key=st.secrets["OPENAI_API_KEY"],
+                api_provider="openai",
+                max_tokens=500,
+                temperature=1.0,
+                top_p=0.9,
+            )
+        )
+    
     engine_args = STORMWikiRunnerArguments(
         output_dir=current_working_dir,
         max_conv_turn=3,
