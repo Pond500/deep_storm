@@ -30,3 +30,7 @@ secrets.toml
 output/
 redirects.lmdb/
 frontend/demo_light/output/
+
+# Wiki large data files
+wiki/vector_store/
+wiki/extracted_data/

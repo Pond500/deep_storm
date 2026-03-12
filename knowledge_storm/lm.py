@@ -119,6 +119,10 @@ def cached_litellm_completion(request):
 
 def litellm_completion(request, cache={"no-cache": True, "no-store": True}):
     kwargs = ujson.loads(request)
+    # Strip None values so LiteLLM can fall back to env vars (e.g. OPENAI_API_KEY,
+    # OPENAI_API_BASE). Without this, api_key=None stored in LM.kwargs is passed
+    # explicitly, overriding the env var lookup and causing auth failures.
+    kwargs = {k: v for k, v in kwargs.items() if v is not None}
     return litellm.completion(cache=cache, **kwargs)
 
 
