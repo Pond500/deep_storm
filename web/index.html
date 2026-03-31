@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SansarnWiki - AI Article Generation</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="settings.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 16L14.5 18.5L20 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>SansarnWiki</span>
+            </div>
+        </div>
+
+        <div class="sidebar-content">
+            <button class="new-chat-btn" onclick="newChat()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>สร้างบทความใหม่</span>
+            </button>
+
+            <button class="settings-btn" onclick="openSettings()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16.5 10a6.5 6.5 0 01-.13 1.3l1.41 1.1a.5.5 0 01.11.64l-1.33 2.31a.5.5 0 01-.61.22l-1.66-.67a6.5 6.5 0 01-2.24 1.3l-.34 1.76a.5.5 0 01-.49.41h-2.66a.5.5 0 01-.49-.41l-.34-1.76a6.5 6.5 0 01-2.24-1.3l-1.66.67a.5.5 0 01-.61-.22L2.09 13a.5.5 0 01.11-.64l1.41-1.1A6.5 6.5 0 013.5 10a6.5 6.5 0 01.13-1.3l-1.41-1.1a.5.5 0 01-.11-.64l1.33-2.31a.5.5 0 01.61-.22l1.66.67a6.5 6.5 0 012.24-1.3l.34-1.76A.5.5 0 018.78 2h2.66a.5.5 0 01.49.41l.34 1.76a6.5 6.5 0 012.24 1.3l1.66-.67a.5.5 0 01.61.22L17.91 7a.5.5 0 01-.11.64l-1.41 1.1a6.5 6.5 0 01.13 1.3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>ตั้งค่า</span>
+            </button>
+
+            <div class="nav-section">
+                <div class="nav-title">ประวัติ</div>
+                <div class="chat-history" id="chatHistory">
+                    <!-- Chat history items will be added here -->
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">โฟลเดอร์</div>
+                <div class="folder-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M2 3.5A1.5 1.5 0 013.5 2h3.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 0010.62 4H12.5A1.5 1.5 0 0114 5.5v7a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5v-9z"/>
+                    </svg>
+                    <span>บทความทั้งหมด</span>
+                    <span class="count" id="articleCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="avatar">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zM2 18a8 8 0 0116 0H2z"/>
+                    </svg>
+                </div>
+                <span>ผู้ใช้งาน</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header with Mode Selector -->
+        <header class="header">
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="storm" onclick="selectMode('storm')">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 2L11.5 7.5L17 9L11.5 10.5L9 16L6.5 10.5L1 9L6.5 7.5L9 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>STORM</span>
+                    <div class="mode-tag">อัตโนมัติ</div>
+                </button>
+                <button class="mode-btn" data-mode="costorm" onclick="selectMode('costorm')">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M3 9H15M9 3L15 9L9 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Co-STORM</span>
+                    <div class="mode-tag">โต้ตอบ</div>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" title="ตั้งค่า">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M16.25 10C16.25 10.4142 16.5858 10.75 17 10.75C17.4142 10.75 17.75 10.4142 17.75 10H16.25ZM2.25 10C2.25 10.4142 2.58579 10.75 3 10.75C3.41421 10.75 3.75 10.4142 3.75 10H2.25Z" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat Area -->
+        <div class="chat-container" id="chatContainer">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="3"/>
+                        <path d="M24 32L29 37L40 26" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="welcome-title">SansarnWiki</h1>
+                <p class="welcome-subtitle">สร้างบทความคุณภาพสูงด้วย AI แบบอัตโนมัติหรือแบบโต้ตอบ</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>STORM - อัตโนมัติ</h3>
+                        <p>สร้างบทความอัตโนมัติ 4 มุมมอง × 5 รอบการค้นคว้า</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>Co-STORM - โต้ตอบ</h3>
+                        <p>สร้างบทความแบบโต้ตอบ ควบคุมเนื้อหาได้ทุกขั้นตอน</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Hybrid Retrieval</h3>
+                        <p>Vector + BM25 + Reranking เพิ่มคุณภาพ +24%</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Wikipedia ไทย</h3>
+                        <p>52,572 บทความจาก Wikipedia ภาษาไทย</p>
+                    </div>
+                </div>
+
+                <div class="suggested-prompts">
+                    <div class="suggested-title">💡 หัวข้อแนะนำ</div>
+                    <div class="prompt-grid">
+                        <button class="prompt-btn" onclick="usePrompt('ประวัติศาสตร์ไทย')">
+                            ประวัติศาสตร์ไทย
+                        </button>
+                        <button class="prompt-btn" onclick="usePrompt('เทคโนโลยี AI')">
+                            เทคโนโลยี AI
+                        </button>
+                        <button class="prompt-btn" onclick="usePrompt('การท่องเที่ยวไทย')">
+                            การท่องเที่ยวไทย
+                        </button>
+                        <button class="prompt-btn" onclick="usePrompt('อาหารไทย')">
+                            อาหารไทย
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="messages" id="messages" style="display: none;">
+                <!-- Messages will be added here -->
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-wrapper">
+                <button class="icon-btn" title="แนบไฟล์">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 5V15M5 10H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                
+                <input 
+                    type="text" 
+                    id="topicInput" 
+                    placeholder="พิมพ์หัวข้อที่ต้องการสร้างบทความ..."
+                    onkeypress="if(event.key === 'Enter') generateArticle()"
+                />
+                
+                <button class="icon-btn" title="พูด">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 13C11.6569 13 13 11.6569 13 10V5C13 3.34315 11.6569 2 10 2C8.34315 2 7 3.34315 7 5V10C7 11.6569 8.34315 13 10 13Z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M16 10C16 13.3137 13.3137 16 10 16C6.68629 16 4 13.3137 4 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M10 16V18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                
+                <button class="send-btn" id="sendBtn" onclick="generateArticle()">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 10L18 2L10 18L9 11L2 10Z"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="input-footer">
+                <span class="mode-indicator" id="modeIndicator">
+                    <span class="mode-dot"></span>
+                    <span>โหมด: STORM (อัตโนมัติ)</span>
+                </span>
+                <span class="info-text">กด Enter เพื่อส่ง • Shift + Enter เพื่อขึ้นบรรทัดใหม่</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>⚙️ ตั้งค่า Research</h2>
+                <button class="modal-close" onclick="closeSettings()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Mode Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="storm" onclick="switchSettingsTab('storm')">
+                        STORM (อัตโนมัติ)
+                    </button>
+                    <button class="settings-tab" data-tab="costorm" onclick="switchSettingsTab('costorm')">
+                        Co-STORM (โต้ตอบ)
+                    </button>
+                </div>
+
+                <!-- STORM Settings -->
+                <div class="settings-panel active" id="stormSettings">
+                    <div class="settings-section">
+                        <h3>🔍 การค้นหาและรวบรวมข้อมูล</h3>
+                        
+                        <div class="setting-item">
+                            <label for="storm_max_conv_turn">
+                                <span class="setting-label">รอบการสนทนาสูงสุด (max_conv_turn)</span>
+                                <span class="setting-desc">จำนวนรอบในการค้นคว้าข้อมูลต่อมุมมอง (แนะนำ: 3-7)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="storm_max_conv_turn" min="1" max="10" value="5" oninput="updateSettingValue('storm_max_conv_turn')">
+                                <span class="setting-value" id="storm_max_conv_turn_value">5</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="storm_max_perspective">
+                                <span class="setting-label">จำนวนมุมมอง (max_perspective)</span>
+                                <span class="setting-desc">จำนวน perspectives ที่หลากหลาย (แนะนำ: 3-5)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="storm_max_perspective" min="2" max="8" value="4" oninput="updateSettingValue('storm_max_perspective')">
+                                <span class="setting-value" id="storm_max_perspective_value">4</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="storm_search_top_k">
+                                <span class="setting-label">ผลการค้นหา (search_top_k)</span>
+                                <span class="setting-desc">จำนวนผลลัพธ์จากการค้นหา (แนะนำ: 3-10)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="storm_search_top_k" min="3" max="15" value="5" oninput="updateSettingValue('storm_search_top_k')">
+                                <span class="setting-value" id="storm_search_top_k_value">5</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="storm_max_search_queries">
+                                <span class="setting-label">Query ต่อรอบ (max_search_queries_per_turn)</span>
+                                <span class="setting-desc">จำนวนคำค้นหาต่อรอบสนทนา (แนะนำ: 1-3)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="storm_max_search_queries" min="1" max="5" value="2" oninput="updateSettingValue('storm_max_search_queries')">
+                                <span class="setting-value" id="storm_max_search_queries_value">2</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="storm_retrieve_top_k">
+                                <span class="setting-label">Snippets สำหรับเขียน (retrieve_top_k)</span>
+                                <span class="setting-desc">จำนวน snippets ที่ใช้เขียนบทความ (แนะนำ: 3-10)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="storm_retrieve_top_k" min="3" max="15" value="5" oninput="updateSettingValue('storm_retrieve_top_k')">
+                                <span class="setting-value" id="storm_retrieve_top_k_value">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-info">
+                        <p>💡 <strong>คำแนะนำ:</strong></p>
+                        <ul>
+                            <li><strong>คุณภาพสูง:</strong> เพิ่มค่าทุกตัว (ใช้เวลานานขึ้น, เสีย API มากขึ้น)</li>
+                            <li><strong>รวดเร็ว:</strong> ลดค่าทุกตัว (ใช้เวลาน้อย, ประหยัด API)</li>
+                            <li><strong>สมดุล:</strong> ใช้ค่า default (แนะนำสำหรับส่วนใหญ่)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Co-STORM Settings -->
+                <div class="settings-panel" id="costormSettings">
+                    <div class="settings-section">
+                        <h3>💬 การสนทนาและค้นคว้า</h3>
+                        
+                        <div class="setting-item">
+                            <label for="costorm_total_conv_turn">
+                                <span class="setting-label">รอบสนทนาทั้งหมด (total_conv_turn)</span>
+                                <span class="setting-desc">จำนวนรอบสนทนาสูงสุดกับผู้ใช้ (แนะนำ: 10-30)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_total_conv_turn" min="5" max="50" value="20" oninput="updateSettingValue('costorm_total_conv_turn')">
+                                <span class="setting-value" id="costorm_total_conv_turn_value">20</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="costorm_retrieve_top_k">
+                                <span class="setting-label">ผลการค้นหา (retrieve_top_k)</span>
+                                <span class="setting-desc">จำนวนผลลัพธ์จากการค้นหา (แนะนำ: 3-10)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_retrieve_top_k" min="3" max="15" value="5" oninput="updateSettingValue('costorm_retrieve_top_k')">
+                                <span class="setting-value" id="costorm_retrieve_top_k_value">5</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="costorm_max_search_queries">
+                                <span class="setting-label">Query สำหรับค้นหา (max_search_queries)</span>
+                                <span class="setting-desc">จำนวนคำค้นหาต่อครั้ง (แนะนำ: 2-5)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_max_search_queries" min="1" max="10" value="3" oninput="updateSettingValue('costorm_max_search_queries')">
+                                <span class="setting-value" id="costorm_max_search_queries_value">3</span>
+                            </div>
+                        </div>
+
+                        <h3>🌟 Warmstart (เริ่มต้น)</h3>
+
+                        <div class="setting-item">
+                            <label for="costorm_warmstart_max_experts">
+                                <span class="setting-label">จำนวนผู้เชี่ยวชาญ (warmstart_max_num_experts)</span>
+                                <span class="setting-desc">จำนวนผู้เชี่ยวชาญเริ่มต้น (แนะนำ: 2-4)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_warmstart_max_experts" min="1" max="6" value="2" oninput="updateSettingValue('costorm_warmstart_max_experts')">
+                                <span class="setting-value" id="costorm_warmstart_max_experts_value">2</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="costorm_warmstart_max_turn">
+                                <span class="setting-label">รอบต่อผู้เชี่ยวชาญ (warmstart_max_turn_per_experts)</span>
+                                <span class="setting-desc">จำนวนรอบสนทนาต่อผู้เชี่ยวชาญ (แนะนำ: 2-5)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_warmstart_max_turn" min="1" max="8" value="2" oninput="updateSettingValue('costorm_warmstart_max_turn')">
+                                <span class="setting-value" id="costorm_warmstart_max_turn_value">2</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="costorm_max_round_table_experts">
+                                <span class="setting-label">ผู้เชี่ยวชาญโต๊ะกลม (max_num_round_table_experts)</span>
+                                <span class="setting-desc">จำนวนผู้เชี่ยวชาญในโต๊ะกลม (แนะนำ: 2-4)</span>
+                            </label>
+                            <div class="setting-input-group">
+                                <input type="range" id="costorm_max_round_table_experts" min="1" max="6" value="2" oninput="updateSettingValue('costorm_max_round_table_experts')">
+                                <span class="setting-value" id="costorm_max_round_table_experts_value">2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-info">
+                        <p>💡 <strong>คำแนะนำ:</strong></p>
+                        <ul>
+                            <li><strong>รอบสนทนามาก:</strong> บทความละเอียด แต่ใช้เวลานาน</li>
+                            <li><strong>ผู้เชี่ยวชาญมาก:</strong> มุมมองหลากหลาย แต่ซับซ้อนขึ้น</li>
+                            <li><strong>สมดุล:</strong> ใช้ค่า default สำหรับส่วนใหญ่</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="resetSettings()">รีเซ็ต</button>
+                <button class="btn-primary" onclick="saveSettings()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
