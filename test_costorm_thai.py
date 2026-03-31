@@ -57,6 +57,7 @@ def main():
     
     # ตรวจสอบ API keys
     llm_api_key = os.getenv("LLM__API_KEY")
+    os.environ["OPENROUTER_API_KEY"] = llm_api_key # Fix LiteLLM AuthenticationError for OpenRouter
     llm_base_url = os.getenv("LLM__BASE_URL")
     llm_model_name = os.getenv("LLM__MODEL_NAME", "openai/gpt-4o-mini")
     tavily_key = os.getenv("TAVILY_API_KEY")

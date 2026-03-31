@@ -123,7 +123,7 @@ class Encoder:
 
     def _get_single_text_embedding(self, text):
         response = litellm.embedding(
-            model=self.embedding_model_name, input=text, caching=True, **self.kargs
+            model=self.embedding_model_name, input=text, caching=True, encoding_format="float", **self.kargs
         )
         embedding = response.data[0]["embedding"]
         token_usage = response.get("usage", {}).get("total_tokens", 0)

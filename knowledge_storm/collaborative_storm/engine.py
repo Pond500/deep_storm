@@ -54,19 +54,19 @@ class CollaborativeStormLMConfigs(LMConfigs):
                 model="gpt-4o-2024-05-13", max_tokens=1000, **openai_kwargs
             )
             self.discourse_manage_lm = LitellmModel(
-                model="gpt-4o-2024-05-13", max_tokens=500, **openai_kwargs
+                model="gpt-4o-mini", max_tokens=500, **openai_kwargs
             )
             self.utterance_polishing_lm = LitellmModel(
                 model="gpt-4o-2024-05-13", max_tokens=2000, **openai_kwargs
             )
             self.warmstart_outline_gen_lm = LitellmModel(
-                model="gpt-4-1106-preview", max_tokens=500, **openai_kwargs
+                model="gpt-4o-mini", max_tokens=500, **openai_kwargs
             )
             self.question_asking_lm = LitellmModel(
                 model="gpt-4o-2024-05-13", max_tokens=300, **openai_kwargs
             )
             self.knowledge_base_lm = LitellmModel(
-                model="gpt-4o-2024-05-13", max_tokens=1000, **openai_kwargs
+                model="gpt-4o-mini", max_tokens=1000, **openai_kwargs
             )
         elif lm_type and lm_type == "azure":
             azure_kwargs = {
@@ -498,7 +498,7 @@ class DiscourseManager:
                 self._is_last_turn_questioning(conversation_history)
                 and not self.runner_argument.disable_multi_experts
             )
-            next_turn_policy.should_polish_utterance = True
+            next_turn_policy.should_polish_utterance = False
         return next_turn_policy
 
 
@@ -521,6 +521,7 @@ class CoStormRunner:
             self.rm = rm
         self.encoder = Encoder()
         self.conversation_history = []
+        self.pending_insert_turns = []  # OPTIMIZATION: buffer for batched insertions
         self.warmstart_conv_archive = []
         self.knowledge_base = KnowledgeBase(
             topic=self.runner_argument.topic,
@@ -740,17 +741,22 @@ class CoStormRunner:
                 if conv_turn is not None:
                     self.conversation_history.append(conv_turn)
                     with self.logging_wrapper.log_event(
-                        f"{cur_turn_name}: insert into knowledge base"
+                        f"{cur_turn_name}: queue for knowledge base insert"
                     ):
-                        if self.callback_handler is not None:
-                            self.callback_handler.on_mindmap_insert_start()
-                        self.knowledge_base.update_from_conv_turn(
-                            conv_turn=conv_turn,
-                            allow_create_new_node=True,
-                            insert_under_root=self.runner_argument.rag_only_baseline_mode,
-                        )
-                        if self.callback_handler is not None:
-                            self.callback_handler.on_mindmap_insert_end()
+                        self.pending_insert_turns.append(conv_turn)
+                        # OPTIMIZATION: Batch insert every 5 turns or if we are going to reorganize anyway
+                        if len(self.pending_insert_turns) >= 5 or turn_policy.should_reorganize_knowledge_base:
+                            if self.callback_handler is not None:
+                                self.callback_handler.on_mindmap_insert_start()
+                            for pending_turn in self.pending_insert_turns:
+                                self.knowledge_base.update_from_conv_turn(
+                                    conv_turn=pending_turn,
+                                    allow_create_new_node=True,
+                                    insert_under_root=self.runner_argument.rag_only_baseline_mode,
+                                )
+                            self.pending_insert_turns = [] # clear buffer
+                            if self.callback_handler is not None:
+                                self.callback_handler.on_mindmap_insert_end()
                 if turn_policy.should_reorganize_knowledge_base:
                     with self.logging_wrapper.log_event(
                         f"{cur_turn_name}: reorganize knowledge base"
